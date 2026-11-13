@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10-A Wep Çaty</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background-color: #030712; color: #f8fafc; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; perspective: 1000px; }
+        
+        .container { width: 100%; max-width: 420px; height: 100%; max-height: 880px; background: linear-gradient(145deg, #0f172a, #090d16); display: flex; flex-direction: column; position: relative; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.2); border-radius: 28px; border: 2px solid rgba(56, 189, 248, 0.3); overflow: hidden; transform-style: preserve-style; animation: containerFloat 6s ease-in-out infinite; }
+        @keyframes containerFloat { 0%, 100% { transform: translateY(0px) rotateX(0deg); } 50% { transform: translateY(-4px) rotateX(1deg); } }
+        
+        .screen { display: none; flex-direction: column; height: 100%; padding: 25px; justify-content: center; align-items: center; text-align: center; overflow-y: auto; position: relative; }
+        .screen.active { display: flex; animation: screenFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes screenFadeIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+        input, button { width: 100%; padding: 15px; margin: 12px 0; border-radius: 14px; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 16px; outline: none; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        input { background: rgba(11, 19, 41, 0.8); color: white; box-shadow: inset 0 3px 6px rgba(0,0,0,0.6), 0 0 15px rgba(0, 150, 255, 0.05); }
+        input:focus { border-color: #38bdf8; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(56, 189, 248, 0.6); transform: translateY(-2px); }
+        
+        button { background: linear-gradient(135deg, #38bdf8, #0284c7); color: #0f172a; font-weight: bold; cursor: pointer; border: none; box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4), inset 0 1px 0 rgba(255,255,255,0.4); position: relative; overflow: hidden; }
+        button::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(rgba(255,255,255,0.2), transparent); transform: rotate(45deg) translateY(-100%); transition: 0.5s; }
+        button:hover::after { transform: rotate(45deg) translateY(100%); }
+        button:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 10px 25px rgba(56, 189, 248, 0.6); }
+        button:active { transform: translateY(1px) scale(0.98); }
+
+        .back-btn { position: absolute; top: 15px; left: 15px; background: rgba(51, 65, 85, 0.8); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 8px 14px; border-radius: 10px; font-size: 13px; cursor: pointer; font-weight: bold; width: auto; margin: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.4); backdrop-filter: blur(5px); transition: 0.3s; }
+        .back-btn:hover { background: #475569; transform: scale(1.05); }
+
+        .live-clock { font-size: 24px; font-weight: bold; color: #38bdf8; background: rgba(22, 34, 56, 0.8); padding: 10px 20px; border-radius: 14px; margin-bottom: 15px; border: 1px solid rgba(56, 189, 248, 0.3); letter-spacing: 3px; box-shadow: 0 8px 20px rgba(0,0,0,0.5), inset 0 0 10px rgba(56, 189, 248, 0.2); }
+        .visitor-counter { font-size: 12px; color: #94a3b8; margin-bottom: 15px; letter-spacing: 1px; }
+
+        #welcomeScreen { background: #0f172a; position: relative; }
+        .welcome-box { position: relative; padding: 40px 30px; background: rgba(30, 41, 59, 0.85); border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); max-width: 90%; border: 1px solid rgba(56, 189, 248, 0.4); backdrop-filter: blur(10px); animation: welcomePop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes welcomePop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .creator-tag { position: absolute; bottom: 10px; right: 15px; font-size: 12px; color: #38bdf8; font-style: italic; font-weight: bold; }
+
+        #chatScreen { padding: 0; justify-content: flex-start; }
+        .chat-header { background: rgba(22, 34, 56, 0.95); padding: 14px 18px; font-weight: bold; font-size: 17px; color: #38bdf8; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); backdrop-filter: blur(10px); }
+        .header-buttons { display: flex; gap: 8px; }
+        
+        .stories-bar { display: flex; gap: 12px; padding: 12px 15px; background: rgba(11, 19, 41, 0.9); overflow-x: auto; border-bottom: 1px solid #334155; width: 100%; align-items: center; }
+        .story-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; flex-shrink: 0; width: 68px; }
+        .story-circle { width: 58px; height: 58px; border-radius: 50%; border: 3px solid #38bdf8; display: flex; justify-content: center; align-items: center; background: #1e293b; position: relative; overflow: hidden; font-weight: bold; font-size: 20px; color: #fff; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3); transition: 0.3s; }
+        .story-circle:hover { transform: scale(1.08); }
+        .story-circle.has-story { border-color: #10b981; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+        .story-plus { position: absolute; bottom: 0; right: 0; background: #38bdf8; color: #0f172a; border-radius: 50%; width: 20px; height: 20px; font-size: 14px; display: flex; justify-content: center; align-items: center; border: 2px solid #0b1329; font-weight: bold; }
+        .story-name { font-size: 11px; color: #94a3b8; margin-top: 5px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+
+        .chat-messages { flex: 1; padding: 15px 15px 70px 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; text-align: left; width: 100%; background: #060a12; }
+        
+        .message { background: #f1f5f9; color: #000000; padding: 12px 16px; border-radius: 14px; max-width: 85%; word-break: break-word; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3); animation: msgAppear 0.3s ease-out; }
+        @keyframes msgAppear { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .message.my-msg { align-self: flex-start; background: #e2e8f0; border-top-left-radius: 2px; } 
+        .message.other-msg { align-self: flex-end; background: #bfdbfe; border-top-right-radius: 2px; } 
+        
+        .message img, .message video, .message audio { max-width: 100%; border-radius: 10px; margin-top: 6px; display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .msg-text { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+        .msg-footer { font-size: 11px; color: #475569; display: flex; justify-content: space-between; align-items: center; margin-top: 6px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 4px; }
+        
+        .msg-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .action-btn { background: #ef4444; color: white; border: none; padding: 6px 10px; border-radius: 8px; font-size: 11px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .action-btn.reply-btn { background: #0284c7; }
+        .action-btn:hover { opacity: 0.9; transform: scale(1.05); }
+
+        .typing-indicator { display: none; padding: 8px 15px; font-size: 12px; color: #94a3b8; font-style: italic; background: rgba(11, 19, 41, 0.9); align-items: center; gap: 6px; width: 100%; border-top: 1px solid #1e293b; }
+        .typing-dots span { height: 6px; width: 6px; float: left; margin: 0 2px; background-color: #38bdf8; border-radius: 50%; display: inline-block; animation: bounce 1.3s infinite ease-in-out; }
+        .typing-dots span:nth-child(2) { animation-delay: -1.1s; }
+        .typing-dots span:nth-child(3) { animation-delay: -0.9s; }
+        @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+
+        .reply-preview { background: #162238; padding: 8px 12px; display: none; justify-content: space-between; align-items: center; font-size: 12px; border-left: 4px solid #38bdf8; color: #cbd5e1; width: 100%; border-radius: 8px; }
+        .reply-preview span { color: #38bdf8; font-weight: bold; }
+
+        .chat-input-area { position: absolute; bottom: 0; left: 0; width: 100%; padding: 12px 15px 18px 15px; background: rgba(22, 34, 56, 0.95); display: flex; flex-direction: column; gap: 6px; border-top: 1px solid #334155; box-shadow: 0 -10px 25px rgba(0,0,0,0.5); z-index: 10; backdrop-filter: blur(10px); }
+        .chat-input-row { display: flex; gap: 8px; align-items: center; width: 100%; }
+        .chat-input-row input[type="text"] { background: #ffffff; color: #000000; margin: 0; flex: 1; border: 1px solid #cbd5e1; font-weight: bold; font-size: 15px; padding: 12px; border-radius: 12px; box-shadow: none; }
+        
+        .file-label, .mic-btn { background: #475569; color: white; padding: 12px; border-radius: 12px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: 0.2s; width: 45px; height: 45px; border: none; }
+        .file-label:hover, .mic-btn:hover { background: #64748b; transform: scale(1.05); }
+        .mic-btn.recording { background: #ef4444; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        
+        .error-text { color: #f87171; font-size: 13px; margin-top: 6px; font-weight: bold; text-shadow: 0 0 10px rgba(248, 113, 113, 0.3); }
+        .checkbox-container { display: flex; align-items: center; gap: 10px; text-align: left; font-size: 13px; margin: 15px 0; cursor: pointer; color: #cbd5e1; }
+        .checkbox-container input { width: 18px; height: 18px; margin: 0; accent-color: #38bdf8; }
+        
+        .reset-btn { background: #ef4444; color: white; margin-top: 10px; font-size: 12px; padding: 12px; border-radius: 12px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
+        .reset-btn:hover { background: #dc2626; }
+
+        #adminPanelScreen { background: #060a12; padding: 20px; text-align: left; }
+        .admin-box { background: rgba(22, 34, 56, 0.8); padding: 15px; border-radius: 16px; margin-bottom: 12px; border: 1px solid rgba(56, 189, 248, 0.3); box-shadow: 0 8px 25px rgba(0,0,0,0.4); backdrop-filter: blur(10px); }
+        .user-list-item { display: flex; flex-direction: column; background: rgba(11, 19, 41, 0.9); padding: 12px; margin: 8px 0; border-radius: 10px; font-size: 12px; border: 1px solid #1e293b; gap: 6px; }
+        .user-info-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); justify-content: center; align-items: center; backdrop-filter: blur(8px); }
+        .modal-content { background: rgba(22, 34, 56, 0.95); padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto; border: 2px solid #38bdf8; color: #fff; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
+        
+        .story-viewer { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: #000; flex-direction: column; justify-content: space-between; padding: 20px; color: #fff; }
+        .story-viewer-header { display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
+        .story-viewer-body { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; overflow: hidden; gap: 15px; }
+        .story-viewer-body img, .story-viewer-body video { max-height: 75vh; max-width: 100%; border-radius: 14px; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .story-viewer-footer { display: flex; flex-direction: column; align-items: center; gap: 8px; padding-bottom: 15px; }
+        .download-btn { background: #10b981; color: #fff; padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: bold; text-decoration: none; display: inline-block; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); transition: 0.3s; }
+        .download-btn:hover { background: #059669; transform: scale(1.05); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="loginScreen" class="screen active">
+        <div id="liveClock" class="live-clock">00:00:00</div>
+        <div class="visitor-counter">Jemi giren ulanyjy sany: <span id="totalVisitorCount">0</span></div>
+        
+        <h2 style="color: #38bdf8; margin-bottom: 6px; text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);">10-A Wep Çaty</h2>
+        <p style="color: #94a3b8; font-size: 13px; margin-bottom: 15px;">Telefon belgini we SMS kodyňyzy ýazyň.</p>
+        
+        <input type="text" id="phoneInput" value="+993" placeholder="+9936xxxxxxxx">
+        
+        <div id="smsStatusBox" style="display: none; margin: 10px 0; font-size: 13px; color: #38bdf8; background: rgba(22, 34, 56, 0.9); padding: 12px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+            📱 SMS Kod iberildi: <span id="simulatedSmsCode" style="font-weight: bold; color: #10b981; letter-spacing: 2px;"></span>
+        </div>
+
+        <div id="secretCodeBox" style="display: none; width: 100%; position: relative;">
+            <button class="back-btn" onclick="backToLoginPhone()" title="Yzyna gaýtmak">🔚 Çykyş</button>
+            <input type="password" id="secretCodeInput" placeholder="5 belgili SMS kody giriziň" style="margin-top: 45px;">
+        </div>
+
+        <div id="loginError" class="error-text"></div>
+        <button id="loginActionBtn" onclick="handleLoginStep()">SMS Kod Almak</button>
+        
+        <button class="reset-btn" onclick="resetStoredData()">Öňki nomeri aýyrmak</button>
+    </div>
+
+    <div id="ruleScreen" class="screen">
+        <button class="back-btn" onclick="showScreen('loginScreen')">🔚 Yzyna</button>
+        <h2>Duýduryş we Kadalar</h2>
+        <p style="color: #cbd5e1; font-size: 14px; margin-top: 40px;">Bu çatda hapa, sögünç sözleri ýazmak gadagan! Eger sögülse, ulgam sizi 3 günlük bloka salar.</p>
+        <label class="checkbox-container" style="margin-top: 20px;">
+            <input type="checkbox" id="ruleCheckbox">
+            <span>Hapa söz ýazmaryn, kadalara tabyn bolaryn.</span>
+        </label>
+        <button onclick="acceptRules()">Giriş Etmek</button>
+    </div>
+    
+    <div id="welcomeScreen" class="screen">
+        <div class="welcome-box">
+            <h2 id="welcomeText" style="color: #38bdf8; font-size: 24px; text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);">Hoş geldiňiz!</h2>
+            <div class="creator-tag">Dörediji: J.Akmämmedow</div>
+        </div>
+    </div>
+
+    <div id="chatScreen" class="screen">
+        <div class="chat-header">
+            <span>10-A Çaty (<span id="currentUserRole"></span>)</span>
+            <div class="header-buttons">
+                <button id="showCodesBtn" style="display:none; width: auto; padding: 6px 12px; margin:0; font-size: 11px; background:#10b981; color:#fff;" onclick="openCodesModal()">Kod</button>
+                <button id="adminPanelBtn" style="display:none; width: auto; padding: 6px 12px; margin:0; font-size: 11px; background:#f59e0b;" onclick="showScreen('adminPanelScreen'); loadAdminPanel();">Admin Panel</button>
+            </div>
+        </div>
+
+        <div id="storiesBar" class="stories-bar"></div>
+
+        <div id="chatMessages" class="chat-messages"></div>
+        
+        <div id="typingIndicator" class="typing-indicator">
+            <span>Biri hat ýazýar</span>
+            <div class="typing-dots"><span></span><span></span><span></span></div>
+        </div>
+
+        <div class="chat-input-area">
+            <div id="replyPreviewBox" class="reply-preview">
+                <div>Ýüz tutulýar: <span id="replyAuthorName"></span> - <i id="replyAuthorText"></i></div>
+                <span onclick="cancelReply()" style="cursor:pointer; font-weight:bold;">✕</span>
+            </div>
+            <div class="chat-input-row">
+                <label class="file-label" for="mediaInput" title="Surat / Wideo">📁</label>
+                <input type="file" id="mediaInput" accept="image/*,video/*" style="display: none;" onchange="sendMedia(event)">
+                
+                <button id="micBtn" class="mic-btn" onclick="toggleVoiceRecording()" title="Ses ýazdyrmak">🎤</button>
+                
+                <!-- Täze Goşulan Çagyryş (Call) Düwmesi -->
+                <button class="file-label" onclick="sendCallInvitation()" title="Çata çagyryş iber" style="background:#0284c7;">📞</button>
+                
+                <input type="text" id="messageInput" placeholder="Habar ýazyň..." oninput="onUserTyping()" onkeydown="if(event.key==='Enter') sendMessage()">
+                <button onclick="sendMessage()" style="width: 70px; margin:0; background:#38bdf8; color:#0f172a;"> Ýolla </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminPanelScreen" class="screen">
+        <h2 style="color: #38bdf8; margin-bottom: 15px;">Admin Paneli</h2>
+        <div class="admin-box">
+            <h4 style="margin-bottom: 8px; color: #38bdf8;">Täze Okuwçy Goşmak</h4>
+            <input type="text" id="newPhone" placeholder="+9936xxxxxxxx">
+            <input type="text" id="newName" placeholder="Ady Familiýasy">
+            <input type="text" id="newCode" placeholder="Hemişelik 5 belgili kod">
+            <button onclick="addNewUser()">Okuwçy Goş</button>
+        </div>
+        <div class="admin-box">
+            <h4 style="margin-bottom: 8px; color: #38bdf8;">Okuwçylaryň Sanawy we Giriş Sany</h4>
+            <div id="adminUserList" style="max-height: 220px; overflow-y: auto;"></div>
+        </div>
+        <button style="background: #ef4444; color: white;" onclick="showScreen('chatScreen'); loadMessages();">Çata Gaýdyp Git</button>
+    </div>
+
+    <div id="blockScreen" class="screen">
+        <h2 style="color: #f87171;">Siz Bloklandyňyz!</h2>
+        <p id="blockMessage" style="margin-top: 15px; color: #cbd5e1;"></p>
+    </div>
+</div>
+
+<input type="file" id="storyFileInput" accept="image/*,video/*" style="display: none;" onchange="uploadStory(event)">
+
+<div id="codesModal" class="modal">
+    <div class="modal-content">
+        <h3 style="color: #38bdf8; margin-bottom: 12px;">Ähli Kodlaryň Sanawy</h3>
+        <div id="modalCodesList" style="max-height: 250px; overflow-y: auto; text-align: left; font-size: 13px; margin-bottom: 15px;"></div>
+        <button style="background: #ef4444; color: #fff;" onclick="closeCodesModal()">Ýap</button>
+    </div>
+</div>
+
+<div id="storyViewer" class="story-viewer">
+    <div class="story-viewer-header">
+        <span id="storyViewerAuthor" style="font-weight: bold; color: #38bdf8;"></span>
+        <span onclick="closeStoryViewer()" style="cursor: pointer; font-size: 22px; font-weight: bold;">✕</span>
+    </div>
+    <div class="story-viewer-body" id="storyViewerContent"></div>
+    <div class="story-viewer-footer">
+        <a id="storyDownloadBtn" class="download-btn" download="story_media">📲 Ýükläp Almak</a>
+        <div id="storyViewerFooter" style="font-size: 13px; color: #38bdf8; font-weight: bold;">Görenler: 0 adam</div>
+    </div>
+</div>
+
+<script>
+    function getStoredUsers() {
+        let defaultUsers = {
+            "+99362395058": { name: "Admin", code: "95058" },
+            "+99364007480": { name: "Mugallym", code: "50192" },
+            "+9936386910": { name: "Daýanç Begmyradow", code: "41285" },
+            "+99371836555": { name: "Gülsat Begmämmedowa", code: "83921" },
+            "+99363577721": { name: "Hangeldi Hydyrgulyýew", code: "19473" },
+            "+99371722944": { name: "Jeren Aganyýazowa", code: "62038" },
+            "+99371198660": { name: "Maksat Begenjow", code: "75842" },
+            "+99362968027": { name: "Nepes Berdimyradow", code: "30169" },
+            "+99371236789": { name: "Taýly Gylyjow", code: "94612" },
+            "+99371439145": { name: "Tirkiş Söýegow", code: "28574" },
+            "+99361196140": { name: "Nejimetdinow Yslam", code: "51930" },
+            "+99365862542": { name: "Ýalkymowa Mähri", code: "68314" }
+        };
+        let stored = localStorage.getItem('customValidUsers');
+        return stored ? JSON.parse(stored) : defaultUsers;
+    }
+
+    const badWords = ["sikerin", "sikdir", "ene amy", "sök", "jynyrs", "hapa"];
+
+    let currentPhone = "";
+    let currentName = "";
+    let replyingToMessage = null;
+    let typingTimer;
+    let lastMessageCount = 0;
+    let lastCallId = 0;
+    
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        let target = document.getElementById(screenId);
+        if (target) target.classList.add('active');
+    }
+
+    window.onload = function() {
+        if (window.Notification && Notification.permission !== "granted") {
+            Notification.requestPermission();
+        }
+
+        setInterval(() => {
+            let now = new Date();
+            let timeString = now.toLocaleTimeString();
+            let clockEl = document.getElementById('liveClock');
+            if (clockEl) clockEl.innerText = timeString;
+        }, 1000);
+
+        updateVisitorStats();
+
+        let savedPhone = localStorage.getItem('activeUserPhone');
+        let rulesAccepted = localStorage.getItem('rulesAccepted_' + savedPhone);
+        
+        if (savedPhone && rulesAccepted) {
+            let validUsers = getStoredUsers();
+            if (validUsers[savedPhone]) {
+                currentPhone = savedPhone;
+                currentName = validUsers[savedPhone].name;
+                
+                let blockData = JSON.parse(localStorage.getItem('block_' + currentPhone));
+                if (blockData && new Date().getTime() < blockData.unblockTime) {
+                    let leftDays = Math.ceil((blockData.unblockTime - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                    document.getElementById('blockMessage').innerText = `Siz hapa söz ulandyňyz üçin 3 günlük bloka düşdiňiz. Galan wagt: ${leftDays} gün.`;
+                    showScreen('blockScreen');
+                    return;
+                }
+
+                showScreen('chatScreen');
+                document.getElementById('currentUserRole').innerText = currentName;
+                
+                if (currentPhone === "+99362395058") {
+                    document.getElementById('adminPanelBtn').style.display = "block";
+                    document.getElementById('showCodesBtn').style.display = "block";
+                } else {
+                    document.getElementById('adminPanelBtn').style.display = "none";
+                    document.getElementById('showCodesBtn').style.display = "none";
+                }
+                loadMessages();
+                renderStories();
+                recordUserActivity("Online");
+            }
+        }
+
+        checkTypingStatus();
+        setInterval(checkTypingStatus, 1000);
+        setInterval(checkForNewMessages, 2000);
+        setInterval(checkForNewCalls, 2000); // Çagyryşlary barlamak üçin
+    };
+
+    function updateVisitorStats() {
+        let visitors = JSON.parse(localStorage.getItem('visitorLogs') || "[]");
+        let countEl = document.getElementById('totalVisitorCount');
+        if (countEl) countEl.innerText = visitors.length;
+    }
+
+    function recordUserActivity(status) {
+        if (!currentPhone) return;
+        let activities = JSON.parse(localStorage.getItem('userActivities') || "{}");
+        let timeNow = new Date().toLocaleTimeString() + " (" + new Date().toLocaleDateString() + ")";
+        
+        if (!activities[currentPhone]) {
+            activities[currentPhone] = { name: currentName, loginCount: 0, logins: [], logouts: [] };
+        }
+
+        if (status === "Online") {
+            activities[currentPhone].loginCount++;
+            activities[currentPhone].lastLogin = timeNow;
+            activities[currentPhone].status = "Online";
+        } else {
+            activities[currentPhone].lastLogout = timeNow;
+            activities[currentPhone].status = "Offline";
+        }
+
+        localStorage.setItem('userActivities', JSON.stringify(activities));
+
+        let visitors = JSON.parse(localStorage.getItem('visitorLogs') || "[]");
+        if (!visitors.includes(currentPhone) && status === "Online") {
+            visitors.push(currentPhone);
+            localStorage.setItem('visitorLogs', JSON.stringify(visitors));
+        }
+    }
+
+    function handleLoginStep() {
+        let phone = document.getElementById('phoneInput').value.trim();
+        let errorDiv = document.getElementById('loginError');
+        let validUsers = getStoredUsers();
+
+        if (!phone || phone === "+993") {
+            errorDiv.innerText = "Telefon belgini doly ýazyň!";
+            return;
+        }
+
+        if (!phone.startsWith("+993")) {
+            errorDiv.innerText = "Telefon belgi hökmany suratda +993 bilen başlamaly!";
+            return;
+        }
+
+        if (!validUsers[phone]) {
+            errorDiv.innerText = "Bu telefon belgi sanawda ýok!";
+            return;
+        }
+
+        let userCode = validUsers[phone].code;
+        document.getElementById('simulatedSmsCode').innerText = userCode;
+        document.getElementById('smsStatusBox').style.display = "block";
+        document.getElementById('secretCodeBox').style.display = "block";
+        document.getElementById('loginActionBtn').innerText = "Giriş Etmek";
+        document.getElementById('loginActionBtn').setAttribute("onclick", "verifyCode()");
+        errorDiv.innerText = "";
+    }
+
+    function backToLoginPhone() {
+        document.getElementById('smsStatusBox').style.display = "none";
+        document.getElementById('secretCodeBox').style.display = "none";
+        document.getElementById('secretCodeInput').value = "";
+        document.getElementById('loginActionBtn').innerText = "SMS Kod Almak";
+        document.getElementById('loginActionBtn').setAttribute("onclick", "handleLoginStep()");
+        document.getElementById('loginError').innerText = "";
+    }
+
+    function verifyCode() {
+        let phone = document.getElementById('phoneInput').value.trim();
+        let secretCode = document.getElementById('secretCodeInput').value.trim();
+        let errorDiv = document.getElementById('loginError');
+        let validUsers = getStoredUsers();
+
+        if (!secretCode) {
+            errorDiv.innerText = "SMS kody giriziň!";
+            return;
+  }
+      if (secretCode !== validUsers[phone].code) {
+            errorDiv.innerText = "Ýalňyş SMS kod girdiňiz!";
+            return;
+        }
+
+        currentPhone = phone;
+        currentName = validUsers[phone].name;
+
+        let rulesAccepted = localStorage.getItem('rulesAccepted_' + currentPhone);
+        
+        errorDiv.innerText = "";
+        if (rulesAccepted) {
+            localStorage.setItem('activeUserPhone', currentPhone);
+            recordUserActivity("Online");
+            showScreen('chatScreen');
+            document.getElementById('currentUserRole').innerText = currentName;
+            if (currentPhone === "+99362395058") {
+                document.getElementById('adminPanelBtn').style.display = "block";
+                document.getElementById('showCodesBtn').style.display = "block";
+            }
+            loadMessages();
+            renderStories();
+        } else {
+            showScreen('ruleScreen');
+        }
+    }
+
+    function resetStoredData() {
+        localStorage.removeItem('activeUserPhone');
+        if (currentPhone) {
+            localStorage.removeItem('rulesAccepted_' + currentPhone);
+        }
+        alert("Nomer ýadyňyzdan aýryldy!");
+        location.reload();
+    }
+
+    function acceptRules() {
+        let checkbox = document.getElementById('ruleCheckbox');
+        if (!checkbox.checked) {
+            alert("Dowam etmek üçin kadalary kabul etmeliňiz!");
+            return;
+        }
+
+        localStorage.setItem('activeUserPhone', currentPhone);
+        localStorage.setItem('rulesAccepted_' + currentPhone, "true");
+        recordUserActivity("Online");
+
+        showScreen('welcomeScreen');
+
+        setTimeout(() => {
+            showScreen('chatScreen');
+            document.getElementById('currentUserRole').innerText = currentName;
+            
+            if (currentPhone === "+99362395058") {
+                document.getElementById('adminPanelBtn').style.display = "block";
+                document.getElementById('showCodesBtn').style.display = "block";
+            }
+            loadMessages();
+            renderStories();
+        }, 4000);
+    }
+
+    // Çagyryş (Call / Çata gir) ugratmak funksiýasy
+    function sendCallInvitation() {
+        let timeNow = new Date().toLocaleTimeString();
+        let callData = {
+            id: Date.now(),
+            sender: currentName,
+            time: timeNow,
+            text: `${currentName} sizi çata çagyrýar! Derhal çata giriň!`
+        };
+        localStorage.setItem('chatCallEvent', JSON.stringify(callData));
+        alert("📞 Çagyryş ähli ulanyjylara üstünlikli iberildi! Wagt: " + timeNow);
+    }
+
+    // Täze çagyryşlary barlamak we bildiriş bermek
+    function checkForNewCalls() {
+        let callData = JSON.parse(localStorage.getItem('chatCallEvent') || "null");
+        if (callData && callData.id > lastCallId) {
+            lastCallId = callData.id;
+            // Eger çagyryşy başga biri iberen bolsa
+            if (callData.sender !== currentName) {
+                let notifyText = `${callData.sender} sizi çata çagyrýar! Wagt: ${callData.time}`;
+                showNotification("Çata Çagyryş!", notifyText);
+                alert(`🔔 ${notifyText}`);
+            }
+        }
+    }
+
+    function triggerAddStory() {
+        document.getElementById('storyFileInput').click();
+    }
+
+    function uploadStory(event) {
+        let file = event.target.files[0];
+        if (!file) return;
+
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let fileData = e.target.result;
+            let type = file.type.startsWith('image') ? 'image' : 'video';
+
+            let stories = JSON.parse(localStorage.getItem('chatStories') || "{}");
+            stories[currentPhone] = {
+                sender: currentName,
+                data: fileData,
+                type: type,
+                time: new Date().toLocaleTimeString(),
+                views: []
+            };
+
+            localStorage.setItem('chatStories', JSON.stringify(stories));
+            renderStories();
+            alert("Story üstünlikli goşuldy!");
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function renderStories() {
+        let bar = document.getElementById('storiesBar');
+        let users = getStoredUsers();
+        let stories = JSON.parse(localStorage.getItem('chatStories') || "{}");
+
+        bar.innerHTML = "";
+
+        let myStory = stories[currentPhone];
+        let myDiv = document.createElement('div');
+        myDiv.className = "story-item";
+        myDiv.onclick = function() {
+            if (myStory) {
+                viewStory(currentPhone);
+            } else {
+                triggerAddStory();
+            }
+        };
+
+        let shortName = currentName.split(" ")[0];
+        myDiv.innerHTML = `
+            <div class="story-circle ${myStory ? 'has-story' : ''}">
+                ${shortName[0]}
+                <div class="story-plus">+</div>
+            </div>
+            <div class="story-name">Siziň story</div>
+        `;
+        bar.appendChild(myDiv);
+
+        for (let phone in users) {
+            if (phone === currentPhone) continue;
+            let userStory = stories[phone];
+            if (!userStory) continue;
+
+            let uName = users[phone].name.split(" ")[0];
+            let item = document.createElement('div');
+            item.className = "story-item";
+            item.onclick = function() { viewStory(phone); };
+            item.innerHTML = `
+                <div class="story-circle has-story">${uName[0]}</div>
+                <div class="story-name">${uName}</div>
+            `;
+            bar.appendChild(item);
+        }
+    }
+
+    function viewStory(phone) {
+        let stories = JSON.parse(localStorage.getItem('chatStories') || "{}");
+        let story = stories[phone];
+        if (!story) return;
+
+        if (!story.views) story.views = [];
+        if (!story.views.includes(currentPhone) && phone !== currentPhone) {
+            story.views.push(currentPhone);
+            stories[phone] = story;
+            localStorage.setItem('chatStories', JSON.stringify(stories));
+        }
+
+        let viewer = document.getElementById('storyViewer');
+        let authorEl = document.getElementById('storyViewerAuthor');
+        let contentEl = document.getElementById('storyViewerContent');
+        let footerEl = document.getElementById('storyViewerFooter');
+        let downloadBtn = document.getElementById('storyDownloadBtn');
+authorEl.innerText = story.sender + " (" + story.time + ")";
+        footerEl.innerText = "Görenler: " + story.views.length + " adam";
+
+        downloadBtn.href = story.data;
+        downloadBtn.download = "story_" + story.sender + (story.type === 'image' ? '.jpg' : '.mp4');
+
+        contentEl.innerHTML = "";
+        if (story.type === 'image') {
+            let img = document.createElement('img');
+            img.src = story.data;
+            contentEl.appendChild(img);
+        } else {
+            let video = document.createElement('video');
+            video.src = story.data;
+            video.controls = true;
+            video.autoplay = true;
+            contentEl.appendChild(video);
+        }
+
+        viewer.style.display = "flex";
+    }
+
+    function closeStoryViewer() {
+        document.getElementById('storyViewer').style.display = "none";
+        document.getElementById('storyViewerContent').innerHTML = "";
+    }
+
+    function openCodesModal() {
+        let users = getStoredUsers();
+        let listContainer = document.getElementById('modalCodesList');
+        listContainer.innerHTML = "";
+
+        for (let phone in users) {
+            let div = document.createElement('div');
+            div.style.padding = "6px 0";
+            div.style.borderBottom = "1px solid #334155";
+            div.innerHTML = `<b>${users[phone].name}</b> (${phone}): <span style="color:#38bdf8; font-weight:bold;">${users[phone].code}</span>`;
+            listContainer.appendChild(div);
+        }
+        document.getElementById('codesModal').style.display = "flex";
+    }
+
+    function closeCodesModal() {
+        document.getElementById('codesModal').style.display = "none";
+    }
+
+    function loadAdminPanel() {
+        let users = getStoredUsers();
+        let activities = JSON.parse(localStorage.getItem('userActivities') || "{}");
+        let listContainer = document.getElementById('adminUserList');
+        listContainer.innerHTML = "";
+
+        for (let phone in users) {
+            let userAct = activities[phone];
+            let loginCount = userAct ? (userAct.loginCount || 0) : 0;
+            let lastLogin = userAct && userAct.lastLogin ? userAct.lastLogin : "Ýok";
+            let status = userAct ? userAct.status : "Offline";
+            
+            let div = document.createElement('div');
+            div.className = "user-list-item";
+            div.innerHTML = `
+                <div class="user-info-row">
+                    <span><b>${users[phone].name}</b><br>${phone}</span>
+                    <button class="action-btn" style="background:#0284c7; width:65px; padding:4px;" onclick="forceResetUserSession('${phone}')">Aç</button>
+                </div>
+                <div style="font-size: 11px; color: #cbd5e1; border-top: 1px solid #1e293b; padding-top: 4px; width: 100%;">
+                    Giriş sany: <b>${loginCount} gezek</b> | Ýagdaýy: <span style="color:${status === 'Online' ? '#10b981' : '#f87171'};">${status}</span><br>
+                    Soňky giren: ${lastLogin}
+                </div>
+            `;
+            listContainer.appendChild(div);
+        }
+    }
+
+    function forceResetUserSession(phone) {
+        localStorage.removeItem('rulesAccepted_' + phone);
+        alert("Bu ulanyjynyň sessiýasy arassalandy!");
+        loadAdminPanel();
+    }
+
+    function addNewUser() {
+        let phone = document.getElementById('newPhone').value.trim();
+        let name = document.getElementById('newName').value.trim();
+        let code = document.getElementById('newCode').value.trim();
+
+        if (!phone.startsWith("+993") || !name || !code) {
+            alert("Dogry nomer, at we kody ýazyň!");
+            return;
+        }
+
+        let users = getStoredUsers();
+        users[phone] = { name: name, code: code };
+        localStorage.setItem('customValidUsers', JSON.stringify(users));
+
+        document.getElementById('newPhone').value = "";
+        document.getElementById('newName').value = "";
+        document.getElementById('newCode').value = "";
+        loadAdminPanel();
+        alert("Okuwçy üstünlikli goşuldy!");
+    }
+
+    function onUserTyping() {
+        localStorage.setItem('typingUser', currentName);
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => { localStorage.removeItem('typingUser'); }, 2000);
+    }
+
+    function checkTypingStatus() {
+        let typingUser = localStorage.getItem('typingUser');
+        let indicator = document.getElementById('typingIndicator');
+        if (typingUser && typingUser !== currentName) {
+            indicator.style.display = "flex";
+        } else {
+            indicator.style.display = "none";
+        }
+    }
+
+    function checkBadWords(text) {
+        let lowerText = text.toLowerCase();
+        for (let word of badWords) {
+            if (lowerText.includes(word)) return true;
+        }
+        return false;
+    }
+
+    function triggerBan() {
+        recordUserActivity("Offline");
+        let unblockTime = new Date().getTime() + (3 * 24 * 60 * 60 * 1000);
+        localStorage.setItem('block_' + currentPhone, JSON.stringify({ unblockTime: unblockTime }));
+        alert("Hapa söz ulandyňyz üçin 3 günlige bloklandyňyz!");
+        location.reload();
+    }
+
+    function escapeHtml(text) {
+        let map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+
+    function sendMessage() {
+        let input = document.getElementById('messageInput');
+        let text = input.value.trim();
+        if (!text) return;
+
+        if (checkBadWords(text)) {
+            triggerBan();
+            return;
+        }
+
+        let cleanText = escapeHtml(text);
+        let messages = JSON.parse(localStorage.getItem('chatMessages') || "[]");
+        
+        let newMsg = {
+            id: Date.now() + Math.random(),
+            sender: currentName,
+            text: cleanText,
+            type: 'text',
+            time: new Date().toLocaleTimeString(),
+            replyTo: replyingToMessage ? { sender: replyingToMessage.sender, text: replyingToMessage.text } : null
+        };
+
+        messages.push(newMsg);
+        localStorage.setItem('chatMessages', JSON.stringify(messages));
+        localStorage.removeItem('typingUser');
+        
+        input.value = "";
+        cancelReply();
+        loadMessages();
+    }
+
+    function sendMedia(event) {
+        let file = event.target.files[0];
+        if (!file) return;
+
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let fileData = e.target.result;
+            saveMediaMessage(fileData, file.type.startsWith('image') ? 'image' : 'video');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function saveMediaMessage(data, type) {
+        let messages = JSON.parse(localStorage.getItem('chatMessages') || "[]");
+        messages.push({
+            id: Date.now() + Math.random(),
+            sender: currentName,
+            data: data,
+            type: type,
+            time: new Date().toLocaleTimeString(),
+            replyTo: null
+        });
+        localStorage.setItem('chatMessages', JSON.stringify(messages));
+        loadMessages();
+    }
+
+    function deleteMessage(msgId) {
+        let messages = JSON.parse(localStorage.getItem('chatMessages') || "[]");
+        messages = messages.filter(m => m.id !== msgId);
+        localStorage.setItem('chatMessages', JSON.stringify(messages));
+        loadMessages();
+    }
+
+    function prepareReply(sender, text) {
+        replyingToMessage = { sender: sender, text: text };
+        document.getElementById('replyAuthorName').innerText = sender;
+        document.getElementById('replyAuthorText').innerText = text;
+        document.getElementById('replyPreviewBox').style.display = "flex";
+        document.getElementById('messageInput').focus();
+    }
+
+    function cancelReply() {
+        replyingToMessage = null;
+        document.getElementById('replyPreviewBox').style.display = "none";
+    }
+
+    function loadMessages() {
+        let chatContainer = document.getElementById('chatMessages');
+        let messages = JSON.parse(localStorage.getItem('chatMessages') || "[]");
+        chatContainer.innerHTML = "";
+        messages.forEach(msg => {
+            let div = document.createElement('div');
+            let isMyMsg = (msg.sender === currentName);
+            div.className = "message " + (isMyMsg ? "my-msg" : "other-msg");
+
+            let contentHTML = "";
+            if (msg.type === 'text') {
+                contentHTML += `<div class="msg-text">${msg.text}</div>`;
+            } else if (msg.type === 'image') {
+                contentHTML += `<img src="${msg.data}">`;
+            } else if (msg.type === 'video') {
+                contentHTML += `<video controls src="${msg.data}"></video>`;
+            } else if (msg.type === 'audio') {
+                contentHTML += `<audio controls src="${msg.data}"></audio>`;
+            }
+
+            contentHTML += `<div class="msg-footer">
+                <span><b>${msg.sender}</b></span>
+                <span>${msg.time}</span>
+            </div>`;
+
+            contentHTML += `<div class="msg-actions">
+                <button class="action-btn reply-btn" onclick="prepareReply('${msg.sender}', '${escapeHtml(msg.text || "[Media]")}')">Jogap ber</button>`;
+            
+            if (isMyMsg || currentName === "Mugallym" || currentPhone === "+99362395058") {
+                contentHTML += `<button class="action-btn" onclick="deleteMessage(${msg.id})">Udalit</button>`;
+            }
+
+            contentHTML += `</div>`;
+            div.innerHTML = contentHTML;
+            chatContainer.appendChild(div);
+        });
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function toggleVoiceRecording() {
+        let micBtn = document.getElementById('micBtn');
+        if (!isRecording) {
+            navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = function() {
+                    let audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                    let reader = new FileReader();
+                    reader.onload = function(e) {
+                        saveMediaMessage(e.target.result, 'audio');
+                    };
+                    reader.readAsDataURL(audioBlob);
+                };
+                mediaRecorder.start();
+                isRecording = true;
+                micBtn.classList.add('recording');
+                micBtn.innerText = "⏹";
+            }).catch(err => {
+                alert("Mikrofona rugsat berilmedi ýa-da ýok!");
+            });
+        } else {
+            mediaRecorder.stop();
+            isRecording, isRecording = false;
+            micBtn.classList.remove('recording');
+            micBtn.innerText = "🎤";
+        }
+    }
+
+    function checkForNewMessages() {
+        let messages = JSON.parse(localStorage.getItem('chatMessages') || "[]");
+        if (messages.length > lastMessageCount) {
+            if (lastMessageCount > 0) {
+                let latestMsg = messages[messages.length - 1];
+                if (latestMsg.sender !== currentName) {
+                    showNotification(latestMsg.sender, latestMsg.text || "[Sesli ýa-da media habar]");
+                }
+            }
+            lastMessageCount = messages.length;
+            loadMessages();
+        }
+    }
+
+    function showNotification(title, text) {
+        if (window.Notification && Notification.permission === "granted") {
+            new Notification(title, { body: text });
+        }
+    }
+</script>
+</body>
+</html>
